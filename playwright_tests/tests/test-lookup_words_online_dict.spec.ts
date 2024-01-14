@@ -85,7 +85,8 @@ test('lookup_word_in_cambridge_dict', async ({ page }) => {
         await linkOption.click();
 
         // how to use RegExp in TypeScript, refer to: https://medium.com/@dingezzz/how-to-use-regex-in-typescript-870d8e27fe09
-        const newPageURL: RegExp = new RegExp(".*" + wordOrPhrase.replace(' ', '.*') + ".*", "i")
+        // how to replace all searchString, refer to: https://www.spguides.com/typescript-string-replaces-all-occurrences/
+        const newPageURL: RegExp = new RegExp(".*" + wordOrPhrase.replace(new RegExp(' ', 'g'), '.*') + ".*", "i")
         console.log(`newPageURL: ${newPageURL}`)
         // after navigating to a new URL, waitForURL should be used, 
         // refer to: 
@@ -136,14 +137,16 @@ test('lookup_word_in_cambridge_dict', async ({ page }) => {
     // }
 
 
-    const defInnerText: string = await page.locator('div.di-body').first().innerText();
-
-    console.log(`data div wordOrPhrase=${wordOrPhrase}, defInnerText=${defInnerText}`)
-    writeFileSync(outFile,
-      `\n==================================\ninnerText:\n${defInnerText}\n==================================\n`,
-      { flag: 'a+' })
-
+    try {
+      const element = page.locator('div.di-body').first()
+      await element.waitFor({ state: 'visible', timeout: 1 * 1000 });
+      const defInnerText: string = await element.innerText();
+      console.log(`data div wordOrPhrase=${wordOrPhrase}, defInnerText=${defInnerText}`)
+      writeFileSync(outFile,
+        `\n==================================\ninnerText:\n${defInnerText}\n==================================\n`,
+        { flag: 'a+' });
+    } catch (e) {
+      console.log(`not data div for wordOrPhrase: ${wordOrPhrase}`)
+    };
   }
-
-  // await page.pause();
 });

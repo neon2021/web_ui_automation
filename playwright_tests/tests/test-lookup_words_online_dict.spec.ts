@@ -38,6 +38,7 @@ async function clickCloseButton(page, locatorQuery: string) {
 
 test('lookup_word_in_cambridge_dict', async ({ page }) => {
   test.setTimeout(120 * 1000);
+  page.setViewportSize({ width: 1920, height: 1200 });
 
   const inFile: string = './input/input-test-lookup_words.txt'
   const wordsTxt: string = readFileSync(inFile, 'utf-8')
@@ -136,17 +137,65 @@ test('lookup_word_in_cambridge_dict', async ({ page }) => {
     //     { flag: 'a+' })
     // }
 
+    const wordDiv = page.getByRole('tabpanel').first().locator('div.pos-header')
+    console.log('wordAndPronunciation: ', await wordDiv.innerText())
 
-    try {
-      const element = page.locator('div.di-body').first()
-      await element.waitFor({ state: 'visible', timeout: 1 * 1000 });
-      const defInnerText: string = await element.innerText();
-      console.log(`data div wordOrPhrase=${wordOrPhrase}, defInnerText=${defInnerText}`)
-      writeFileSync(outFile,
-        `\n==================================\ninnerText:\n${defInnerText}\n==================================\n`,
-        { flag: 'a+' });
-    } catch (e) {
-      console.log(`not data div for wordOrPhrase: ${wordOrPhrase}`)
-    };
+    const def = page.getByRole('tabpanel').first().locator('div.def-block div.ddef_h div.ddef_d')
+    console.log('wordDefinition: ')
+
+    for (const p of await def.all()) {
+      console.log('textContent: ', await p.textContent())
+    }
+
+    // for (const p of await def.allTextContents()) {
+    //   console.log('textContent: ', p)
+    // }
+    // for (const p of await def.allInnerTexts()) {
+    //   console.log('inText: ', p)
+    // }
+
+    // console.log('combined textContent: ', await def.textContent()) // too many elements
+    // console.log('combined innerText: ', await def.innerText())
+
+    // try {
+    //   const element = page.locator('div.di-body').first()
+    //   await element.waitFor({ state: 'visible', timeout: 1 * 1000 });
+    //   const defInnerText: string = await element.innerText();
+    //   console.log(`data div wordOrPhrase=${wordOrPhrase}, defInnerText=${defInnerText}`)
+    //   writeFileSync(outFile,
+    //     `\n==================================\ninnerText:\n${defInnerText}\n==================================\n`,
+    //     { flag: 'a+' });
+    // } catch (e) {
+    //   console.log(`not data div for wordOrPhrase: ${wordOrPhrase}`)
+    // };
+  }
+});
+
+test('smaller_lookup_word_in_cambridge_dict', async ({ page }) => {
+  test.setTimeout(120 * 1000);
+  page.setViewportSize({ width: 1920, height: 1200 });
+
+  await page.goto('https://dictionary.cambridge.org/dictionary/english/bottomless');
+
+  // const wordSpanArray = page.getByRole('tabpanel').first().locator('//div[contains(@class,"pos-header")]//span')
+  // const wordSpanArray = page.getByRole('tabpanel').first().locator('div.pos-header span')
+  const wordSpanArray = page.getByRole('tabpanel').first().locator('div.pos-header')
+  console.log('wordAndPronunciation: ')
+  const spanLen = await wordSpanArray.count()
+  console.log('spanLen: ', spanLen)
+
+  const allChildren = await wordSpanArray.all()
+  for (const p of allChildren) {
+    console.log('textContent: ', await p.textContent()) // ugly format
+  }
+  for (const p of allChildren) {
+    console.log('innerText: ', await p.innerText()) // better format
+  }
+
+  const def = page.getByRole('tabpanel').first().locator('div.def-block div.ddef_h div.ddef_d')
+  console.log('wordDefinition: ')
+
+  for (const p of await def.all()) {
+    console.log('textContent: ', await p.textContent())
   }
 });

@@ -109,11 +109,6 @@ test('lookup_word_in_cambridge_dict', async ({ page }) => {
     // await page.locator('div.di-body').first().innerText().then((value: string) => {
     //   console.log('def: \n', value)
     // })
-
-    // write to a file, refer to: https://bobbyhadz.com/blog/typescript-write-to-a-file
-    writeFileSync(outFile,
-      `\n\nDefinition: =====${wordOrPhrase}=====\n`,
-      { flag: 'a+' })
     // for (const element of await page.locator('div.di-body').all()) {
     //   writeFileSync(outFile,
     //     `\n==================================\ninnerText:\n${await element.innerText()}\n==================================\n`,
@@ -121,31 +116,29 @@ test('lookup_word_in_cambridge_dict', async ({ page }) => {
     //   // console.log('innerHTML: ', await element.innerHTML())
     // }
 
-    // const element = page.locator('div.di-body').first()
-    // await element.waitFor({ state: 'visible', timeout: 1 * 1000 }).then(() => {
-    //   console.log(`data div for wordOrPhrase is found: ${wordOrPhrase}`)
-    // }, e => {
-    //   console.log(`not data div for wordOrPhrase: ${wordOrPhrase}`)
-    // })
-    // const defDivCount: number = await element.count()
-    // const defDivVisible: boolean = await element.isVisible()
-    // const defInnerText: string = await element.innerText()
-    // console.log(`data div wordOrPhrase: defDivCount=${defDivCount}, defDivVisible=${defDivVisible}, defInnerText=${defInnerText}`)
-    // if (defDivCount > 0 && defDivVisible) {
-    //   writeFileSync(outFile,
-    //     `\n==================================\ninnerText:\n${defInnerText}\n==================================\n`,
-    //     { flag: 'a+' })
-    // }
+    try {
+      const wordDiv = page.getByRole('tabpanel').first().locator('div.pos-header').first()
+      let word = await wordDiv.innerText({ timeout: 2 * 1000 }) // aovid being stuck on this line too long
+      word = (word ?? "").replace(/\u00a0/g, " ")
+      console.log('wordAndPronunciation: ', word)
 
-    const wordDiv = page.getByRole('tabpanel').first().locator('div.pos-header')
-    console.log('wordAndPronunciation: ', await wordDiv.innerText())
+      // write to a file, refer to: https://bobbyhadz.com/blog/typescript-write-to-a-file
+      writeFileSync(outFile, `\n\nDefinition: =====${wordOrPhrase}=====\n`, { flag: 'a+' })
+      writeFileSync(outFile, `\n${word}\n`, { flag: 'a+' });
 
-    const def = page.getByRole('tabpanel').first().locator('div.def-block div.ddef_h div.ddef_d')
-    console.log('wordDefinition: ')
+      const def = page.getByRole('tabpanel').first().locator('div.def-block div.ddef_h div.ddef_d')
+      console.log('wordDefinition: ')
 
-    for (const p of await def.all()) {
-      console.log('textContent: ', await p.textContent())
-    }
+      for (const p of await def.all()) {
+        let txtContent = await p.textContent()
+        txtContent = (txtContent ?? "").replace(/\u00a0/g, " ")
+
+        console.log('textContent: ', txtContent)
+        writeFileSync(outFile, `\n${txtContent};`, { flag: 'a+' });
+      }
+    } catch (e) {
+      console.log(`not data div for wordOrPhrase: ${wordOrPhrase}`)
+    };
 
     // for (const p of await def.allTextContents()) {
     //   console.log('textContent: ', p)
